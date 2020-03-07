@@ -127,7 +127,8 @@ _Noreturn void RTCoreMain(void)
     VectorTableInit();
     CPUFreq_Set(26000000);
 
-    debug = UART_Open(MT3620_UNIT_UART_DEBUG, 115200, UART_PARITY_NONE, 1, NULL);
+    //debug = UART_Open(MT3620_UNIT_UART_DEBUG, 115200, UART_PARITY_NONE, 1, NULL);
+    debug = UART_Open(MT3620_UNIT_ISU1, 115200, UART_PARITY_NONE, 1, NULL);
     UART_Print(debug, "--------------------------------\r\n");
     UART_Print(debug, "UART_RTApp_MT3620_BareMetal\r\n");
     UART_Print(debug, "App built on: " __DATE__ " " __TIME__ "\r\n");
