@@ -21,19 +21,16 @@
 #include "lib/NVIC.h"
 #include "lib/GPIO.h"
 #include "lib/GPT.h"
-#include "lib/UART.h"
-#include "lib/Print.h"
-#include "lib/I2CMaster.h"
 
-#include "TCS34725.h"
+#include "ColorStream.h"
+#include "debug.h"
+
 
 static const int buttonAGpio = 12;
 static const int buttonPressCheckPeriodMs = 10;
 static void HandleButtonTimerIrq(GPT *);
 static void HandleButtonTimerIrqDeferred(void);
 
-static I2CMaster *driver = NULL;
-UART      *debug  = NULL;
 static GPT       *buttonTimeout = NULL;
 
 typedef struct CallbackNode {
@@ -61,7 +58,8 @@ static void HandleButtonTimerIrqDeferred(void)
     if (newState != prevState) {
         bool pressed = !newState;
         if (pressed) {
-            UART_Print(debug, "RTCore: Hello world!");
+            //DEBUG("RTCore: Hello world!\r\n\r\n");
+            DEBUG("RTCore: OH FDF UEAH Hello world!\r\n\r\n");
         }
 
         prevState = newState;
@@ -70,31 +68,33 @@ static void HandleButtonTimerIrqDeferred(void)
 
 static void HandleUartIsu0RxIrqDeferred(void)
 {
+    /*
     uintptr_t avail = UART_ReadAvailable(debug);
     if (avail == 0) {
-        UART_Print(debug, "ERROR: UART received interrupt for zero bytes.\r\n");
+        DEBUG("ERROR: UART received interrupt for zero bytes.\r\n");
         return;
     }
 
     if (avail >= 65536) {
         // Avoid handling large amounts of data as this could cause stack issues.
-        UART_Print(debug, "ERROR: UART received too many bytes.\r\n");
+        DEBUG("ERROR: UART received too many bytes.\r\n");
         return;
     }
 
     uint8_t buffer[avail];
     if (UART_Read(debug, buffer, avail) != ERROR_NONE) {
-        UART_Print(debug, "ERROR: Failed to read ");
+        DEBUG("ERROR: Failed to read ");
         UART_PrintUInt(debug, avail);
-        UART_Print(debug, " bytes from UART.\r\n");
+        DEBUG(" bytes from UART.\r\n");
         return;
     }
 
-    UART_Print(debug, "UART received ");
+    DEBUG("UART received ");
     UART_PrintUInt(debug, avail);
-    UART_Print(debug, " bytes: \'");
+    DEBUG(" bytes: \'");
     UART_Write(debug, buffer, avail);
-    UART_Print(debug, "\'.\r\n");
+    DEBUG("\'.\r\n");
+    */
 }
 
 
@@ -127,7 +127,6 @@ static void InvokeCallbacks(void)
             node->enqueued = false;
             callbacks = node->next;
         }
-        NVIC_RestoreIRQs(prevBasePri);
 
         if (node) {
             (*node->cb)();
@@ -140,51 +139,27 @@ _Noreturn void RTCoreMain(void)
     VectorTableInit();
     CPUFreq_Set(26000000);
 
-    //debug = UART_Open(MT3620_UNIT_UART_DEBUG, 115200, UART_PARITY_NONE, 1, NULL);
-    debug = UART_Open(MT3620_UNIT_ISU1, 115200, UART_PARITY_NONE, 1, NULL);
-    UART_Print(debug, "--------------------------------\r\n");
-    UART_Print(debug, "UART_RTApp_MT3620_BareMetal\r\n");
-    UART_Print(debug, "App built on: " __DATE__ " " __TIME__ "\r\n");
+    debug_init(MT3620_UNIT_ISU1);
+    
+    DEBUG("--------------AAA---------------\r\n");
+    DEBUG("UART_RTApp_MT3620_BareMetal\r\n");
+    DEBUG("App built on: " __DATE__ " " __TIME__ "\r\n");
 
-    driver = I2CMaster_Open(MT3620_UNIT_ISU0);
-    if (!driver) {
-        UART_Print(debug, "ERROR: I2C initialisation failed\r\n");
-    }
+    CS_Init();
 
-    I2CMaster_SetBusSpeed(driver, I2C_BUS_SPEED_FAST);
-
-    if (!TCS_CheckWhoAmI(driver)) {
-        UART_Print(debug, "Who Am I Failed");
-    }
-
-    if (!TCS_Reset(driver)) {
-        UART_Print(debug, "Reset Failed");
-    }
-
-    uint16_t red = 0;
-    uint16_t green = 0;
-    uint16_t blue = 0;
-
-    if (!TCS_ReadColorData(driver, &red, &green, &blue)) {
-        UART_Print(debug, "Failed to read colors");
-    }
-
-    UART_Printf(debug, "Red: %d\r\nGreen: %d\r\nBlue: %d\r\n", red, green, blue);
-
-    UART_Print(debug,
-        "Install a loopback header on ISU0, and press button A to send a message.\r\n");
+    DEBUG("Install a loopback header on ISU0, and press button A to send a message.\r\n");
 
     GPIO_ConfigurePinForInput(buttonAGpio);
 
     // Setup GPT1 to poll for button press
     if (!(buttonTimeout = GPT_Open(MT3620_UNIT_GPT1, 1000, GPT_MODE_REPEAT))) {
-        UART_Print(debug, "ERROR: Opening timer\r\n");
+        DEBUG("ERROR: Opening timer\r\n");
     }
     int32_t error;
 
     if ((error = GPT_StartTimeout(buttonTimeout, buttonPressCheckPeriodMs,
                                   GPT_UNITS_MILLISEC, &HandleButtonTimerIrq)) != ERROR_NONE) {
-        UART_Printf(debug, "ERROR: Starting timer (%ld)\r\n", error);
+        DEBUG("ERROR: Starting timer (%ld)\r\n", error);
     }
 
     for (;;) {

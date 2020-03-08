@@ -1,9 +1,6 @@
 #include "TCS34725.h"
 
-#include "lib/UART.h"
-#include "lib/Print.h"
-
-extern UART* debug;
+#include "debug.h"
 
 #define TCS_REG_WHO_AM_I 0x92
 #define TCS_WHO_AM_I 0x44
@@ -12,7 +9,7 @@ extern UART* debug;
 #define TCS_REG_AGAIN 0x8F
 #define TCS_REG_ENABLE 0x80
 
-bool TCS_CheckWhoAmI(I2CMaster* driver) {
+bool TCS34725_CheckWhoAmI(I2CMaster* driver) {
 	if (!driver) {
 		return false;
 	}
@@ -44,22 +41,22 @@ bool TCS_Reset(I2CMaster* driver) {
 	}
 
 	if (!TCS_RegWrite(driver, TCS_REG_ATIME, 0xFD)) {
-		UART_Print(debug, "Failed to write aTime");
+		DEBUG("Failed to write aTime");
 		return false;
 	}
 
 	if (!TCS_RegWrite(driver, TCS_REG_AGAIN, 0x03)) {
-		UART_Print(debug, "Failed to write aGain");
+		DEBUG("Failed to write aGain");
 		return false;
 	}
 
 	if (!TCS_RegWrite(driver, TCS_REG_ENABLE, 0x01)) {
-		UART_Print(debug, "Failed to write enable");
+		DEBUG("Failed to write enable");
 		return false;
 	}
 
 	if (!TCS_RegWrite(driver, TCS_REG_ENABLE, 0x03)) {
-		UART_Print(debug, "Failed to write enable twice");
+		DEBUG("Failed to write enable twice");
 		return false;
 	}
 
@@ -67,17 +64,17 @@ bool TCS_Reset(I2CMaster* driver) {
 	if (!TCS_RegRead(driver, TCS_REG_ATIME, &v, sizeof(v))) {
 		return false;	
 	}
-	UART_Printf(debug, "aTime register = 0x%02x\r\n", v);
+	DEBUG("aTime register = 0x%02x\r\n", v);
 
 	if (!TCS_RegRead(driver, TCS_REG_AGAIN, &v, sizeof(v))) {
 		return false;
 	}
-	UART_Printf(debug, "aGain register = 0x%02x\r\n", v);
+	DEBUG("aGain register = 0x%02x\r\n", v);
 
 	if (!TCS_RegRead(driver, TCS_REG_ENABLE, &v, sizeof(v))) {
 		return false;
 	}
-	UART_Printf(debug, "enable register = 0x%02x\r\n", v);
+	DEBUG("enable register = 0x%02x\r\n", v);
 
 	return true;
 }
