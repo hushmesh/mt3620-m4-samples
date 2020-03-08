@@ -14,6 +14,7 @@
 #include "lib/Print.h"
 #include "lib/I2CMaster.h"
 
+#include "TCS34725.h"
 
 static const int buttonAGpio = 12;
 static const int buttonPressCheckPeriodMs = 10;
@@ -148,6 +149,16 @@ _Noreturn void RTCoreMain(void)
     if (!TCS_Reset(driver)) {
         UART_Print(debug, "Reset Failed");
     }
+
+    uint16_t red = 0;
+    uint16_t green = 0;
+    uint16_t blue = 0;
+
+    if (!TCS_ReadColorData(driver, &red, &green, &blue)) {
+        UART_Print(debug, "Failed to read colors");
+    }
+
+    UART_Printf(debug, "Red: %d\nGreen: %d\nBlue: %d\n", red, green, blue);
 
     UART_Print(debug,
         "Install a loopback header on ISU0, and press button A to send a message.\r\n");
