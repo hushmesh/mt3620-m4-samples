@@ -12,6 +12,7 @@
 #include "lib/GPT.h"
 #include "lib/UART.h"
 #include "lib/Print.h"
+#include "lib/I2CMaster.h"
 
 
 static const int buttonAGpio = 12;
@@ -19,9 +20,9 @@ static const int buttonPressCheckPeriodMs = 10;
 static void HandleButtonTimerIrq(GPT *);
 static void HandleButtonTimerIrqDeferred(void);
 
-static UART *driver = NULL;
-static UART *debug  = NULL;
-static GPT *buttonTimeout = NULL;
+static I2CMaster *driver = NULL;
+UART      *debug  = NULL;
+static GPT       *buttonTimeout = NULL;
 
 typedef struct CallbackNode {
     bool enqueued;
@@ -48,7 +49,7 @@ static void HandleButtonTimerIrqDeferred(void)
     if (newState != prevState) {
         bool pressed = !newState;
         if (pressed) {
-            UART_Print(driver, "RTCore: Hello world!");
+            UART_Print(debug, "RTCore: Hello world!");
         }
 
         prevState = newState;
@@ -57,7 +58,7 @@ static void HandleButtonTimerIrqDeferred(void)
 
 static void HandleUartIsu0RxIrqDeferred(void)
 {
-    uintptr_t avail = UART_ReadAvailable(driver);
+    uintptr_t avail = UART_ReadAvailable(debug);
     if (avail == 0) {
         UART_Print(debug, "ERROR: UART received interrupt for zero bytes.\r\n");
         return;
@@ -70,7 +71,7 @@ static void HandleUartIsu0RxIrqDeferred(void)
     }
 
     uint8_t buffer[avail];
-    if (UART_Read(driver, buffer, avail) != ERROR_NONE) {
+    if (UART_Read(debug, buffer, avail) != ERROR_NONE) {
         UART_Print(debug, "ERROR: Failed to read ");
         UART_PrintUInt(debug, avail);
         UART_Print(debug, " bytes from UART.\r\n");
@@ -133,9 +134,19 @@ _Noreturn void RTCoreMain(void)
     UART_Print(debug, "UART_RTApp_MT3620_BareMetal\r\n");
     UART_Print(debug, "App built on: " __DATE__ " " __TIME__ "\r\n");
 
-    driver = UART_Open(MT3620_UNIT_ISU0, 115200, UART_PARITY_NONE, 1, HandleUartIsu0RxIrq);
+    driver = I2CMaster_Open(MT3620_UNIT_ISU0);
     if (!driver) {
-        UART_Print(debug, "ERROR: UART initialisation failed\r\n");
+        UART_Print(debug, "ERROR: I2C initialisation failed\r\n");
+    }
+
+    I2CMaster_SetBusSpeed(driver, I2C_BUS_SPEED_FAST);
+
+    if (!TCS_CheckWhoAmI(driver)) {
+        UART_Print(debug, "Who Am I Failed");
+    }
+
+    if (!TCS_Reset(driver)) {
+        UART_Print(debug, "Reset Failed");
     }
 
     UART_Print(debug,
