@@ -67,17 +67,17 @@ bool TCS_Reset(I2CMaster* driver) {
 	if (!TCS_RegRead(driver, TCS_REG_ATIME, &v, sizeof(v))) {
 		return false;	
 	}
-	UART_Printf(debug, "aTime register = 0x%02x\n", v);
+	UART_Printf(debug, "aTime register = 0x%02x\r\n", v);
 
 	if (!TCS_RegRead(driver, TCS_REG_AGAIN, &v, sizeof(v))) {
 		return false;
 	}
-	UART_Printf(debug, "aGain register = 0x%02x\n", v);
+	UART_Printf(debug, "aGain register = 0x%02x\r\n", v);
 
 	if (!TCS_RegRead(driver, TCS_REG_ENABLE, &v, sizeof(v))) {
 		return false;
 	}
-	UART_Printf(debug, "enable register = 0x%02x\n", v);
+	UART_Printf(debug, "enable register = 0x%02x\r\n", v);
 
 	return true;
 }

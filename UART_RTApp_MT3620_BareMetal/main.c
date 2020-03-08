@@ -1,4 +1,15 @@
-/* Copyright (c) Codethink Ltd. All rights reserved.
+/* ColorStream_RTApp_MT3620_BareMetal
+   Continually monitors light sensor for ColorStream input. When found, decodes it and
+   sends result to high-level app.
+
+   TODO
+   1. Write TCS34725 library
+   2. Implement timer callbacks from main loop
+   3. Implement ColorStream algorithm
+   4. Connect to partner_hlapp */
+
+/* Modified from: UART_RTApp_MT3620_BareMetal 
+   Copyright (c) Codethink Ltd. All rights reserved.
    Licensed under the MIT License. */
 
 #include <stddef.h>
@@ -158,7 +169,7 @@ _Noreturn void RTCoreMain(void)
         UART_Print(debug, "Failed to read colors");
     }
 
-    UART_Printf(debug, "Red: %d\nGreen: %d\nBlue: %d\n", red, green, blue);
+    UART_Printf(debug, "Red: %d\r\nGreen: %d\r\nBlue: %d\r\n", red, green, blue);
 
     UART_Print(debug,
         "Install a loopback header on ISU0, and press button A to send a message.\r\n");
