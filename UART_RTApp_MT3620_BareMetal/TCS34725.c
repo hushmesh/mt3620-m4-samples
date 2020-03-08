@@ -9,90 +9,107 @@
 #define TCS_REG_AGAIN 0x8F
 #define TCS_REG_ENABLE 0x80
 
-bool TCS34725_CheckWhoAmI(I2CMaster* driver) {
-	if (!driver) {
-		return false;
-	}
-
+int32_t TCS34725_CheckWhoAmI(I2CMaster* driver) {
 	uint8_t ident;
 
-	if (!TCS_RegRead(driver, TCS_REG_WHO_AM_I, &ident, sizeof(ident))) {
-		return false;
+	int32_t error = TCS_RegRead(driver, TCS_REG_WHO_AM_I, &ident, sizeof(ident));
+	if (error != ERROR_NONE) {
+		return error;
 	}
 
-	return (ident == TCS_WHO_AM_I);
+	if (ident != TCS_WHO_AM_I) {
+		return ERROR_UNSUPPORTED;
+	}
+
+	return ERROR_NONE;
 }
 
-bool TCS_RegRead(I2CMaster* driver, uint8_t addr, void* value, size_t valueSize) {
-	int32_t status = I2CMaster_WriteThenReadSync(
-		driver, TCS_ADDRESS, &addr, sizeof(addr), value, valueSize);
-	return (status == ERROR_NONE);
+int32_t TCS_RegRead(I2CMaster* driver, uint8_t addr, void* value, size_t valueSize) {
+	return I2CMaster_WriteThenReadSync(
+		driver, 
+		TCS_ADDRESS, 
+		&addr, 
+		sizeof(uint8_t), 
+		value, 
+		valueSize
+	);
 }
 
-bool TCS_RegWrite(I2CMaster* driver, uint8_t addr, uint8_t value) {
+int32_t TCS_RegWrite(I2CMaster* driver, uint8_t addr, uint8_t value) {
 	const uint8_t cmd[] = { addr, value };
 	size_t cmdsize = sizeof(cmd);
-	return (I2CMaster_WriteSync(driver, TCS_ADDRESS, &cmd, cmdsize) == ERROR_NONE);
+	return I2CMaster_WriteSync(driver, TCS_ADDRESS, &cmd, cmdsize);
 }
 
-bool TCS_Reset(I2CMaster* driver) {
-	if (!driver) {
-		return false;
-	}
+int32_t TCS_Reset(I2CMaster* driver) {
+	int32_t error = ERROR_NONE;
 
-	if (!TCS_RegWrite(driver, TCS_REG_ATIME, 0xFD)) {
+	error = TCS_RegWrite(driver, TCS_REG_ATIME, 0xFD);
+	if (error != ERROR_NONE) {
 		DEBUG("Failed to write aTime");
-		return false;
+		return error;
 	}
 
-	if (!TCS_RegWrite(driver, TCS_REG_AGAIN, 0x03)) {
+	error = TCS_RegWrite(driver, TCS_REG_AGAIN, 0x03);
+	if (error != ERROR_NONE) {
 		DEBUG("Failed to write aGain");
-		return false;
+		return error;
 	}
 
-	if (!TCS_RegWrite(driver, TCS_REG_ENABLE, 0x01)) {
+	error = TCS_RegWrite(driver, TCS_REG_ENABLE, 0x01);
+	if (error != ERROR_NONE) {
 		DEBUG("Failed to write enable");
-		return false;
+		return error;
 	}
 
-	if (!TCS_RegWrite(driver, TCS_REG_ENABLE, 0x03)) {
-		DEBUG("Failed to write enable twice");
-		return false;
+	error = TCS_RegWrite(driver, TCS_REG_ENABLE, 0x03);
+	if (error != ERROR_NONE) {
+			DEBUG("Failed to write enable twice");
+			return error;
 	}
 
 	uint8_t v;
-	if (!TCS_RegRead(driver, TCS_REG_ATIME, &v, sizeof(v))) {
-		return false;	
+	error = TCS_RegRead(driver, TCS_REG_ATIME, &v, sizeof(v));
+	if (error != ERROR_NONE) {
+		return error;
 	}
 	DEBUG("aTime register = 0x%02x\r\n", v);
 
-	if (!TCS_RegRead(driver, TCS_REG_AGAIN, &v, sizeof(v))) {
-		return false;
+	error = TCS_RegRead(driver, TCS_REG_AGAIN, &v, sizeof(v));
+	if (error != ERROR_NONE) {
+		return error;
 	}
 	DEBUG("aGain register = 0x%02x\r\n", v);
 
-	if (!TCS_RegRead(driver, TCS_REG_ENABLE, &v, sizeof(v))) {
-		return false;
+	error = TCS_RegRead(driver, TCS_REG_ENABLE, &v, sizeof(v));
+	if (error != ERROR_NONE) {
+		return error;
 	}
 	DEBUG("enable register = 0x%02x\r\n", v);
 
-	return true;
+	return ERROR_NONE;
 }
 
 #define TCS_REG_RED 0x96
 #define TCS_REG_GREEN 0x98
 #define TCS_REG_BLUE 0x9A
 
-int TCS_ReadColorData(I2CMaster *driver, uint16_t* rdata, uint16_t* gdata, uint16_t* bdata) {
-	if (!TCS_RegRead(driver, TCS_REG_RED, rdata, sizeof(uint16_t))) {
-		return false;
-	}
-	if (!TCS_RegRead(driver, TCS_REG_GREEN, gdata, sizeof(uint16_t))) {
-		return false;
-	}
-	if (!TCS_RegRead(driver, TCS_REG_BLUE, bdata, sizeof(uint16_t))) {
-		return false;
+int32_t TCS_ReadColorData(I2CMaster *driver, uint16_t* rdata, uint16_t* gdata, uint16_t* bdata) {
+	int32_t error = ERROR_NONE;
+	error = TCS_RegRead(driver, TCS_REG_RED, rdata, sizeof(uint16_t));
+	if (error != ERROR_NONE) {
+		return error;
 	}
 
-	return true;
+	error = TCS_RegRead(driver, TCS_REG_GREEN, gdata, sizeof(uint16_t));
+	if (error != ERROR_NONE) {
+		return error;
+	}
+
+	error = TCS_RegRead(driver, TCS_REG_BLUE, bdata, sizeof(uint16_t));
+	if (error != ERROR_NONE) {
+		return error;
+	}
+
+	return ERROR_NONE;
 }
