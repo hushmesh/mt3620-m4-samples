@@ -35,7 +35,7 @@ void CS_Init() {
         return;
     }
 
-    error = TCS_Reset(driver);
+    error = TCS34725_Reset(driver);
     if (error != ERROR_NONE) {
         DEBUG("Reset Failed");
     }
@@ -48,7 +48,7 @@ void CS_Init() {
 }
 
 int32_t cs_ReadSensor() {
-    int32_t error = TCS_ReadColorData(driver, &current.red, &current.green, &current.blue);
+    int32_t error = TCS34725_ReadColorData(driver, &current.red, &current.green, &current.blue);
     if (error == ERROR_NONE) {
         DEBUG("Red: %d\r\nGreen: %d\r\nBlue: %d\r\n", current.red, current.green, current.blue);
     }
