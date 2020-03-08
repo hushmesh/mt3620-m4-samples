@@ -1,6 +1,6 @@
 #include "TCS34725.h"
 
-#include "debug.h"
+#include "Debug.h"
 
 #define TCS_REG_WHO_AM_I 0x92
 #define TCS_WHO_AM_I 0x44

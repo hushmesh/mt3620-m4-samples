@@ -16,6 +16,6 @@
 #include "lib/Platform.h"
 
 extern UART* DEBUG_UART;
-void debug_init(Platform_Unit unit);
+void DEBUG_Init(Platform_Unit unit);
 
 #define DEBUG(...) UART_Printf(DEBUG_UART, __VA_ARGS__)

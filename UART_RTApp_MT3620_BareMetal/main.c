@@ -23,7 +23,7 @@
 #include "lib/GPT.h"
 
 #include "ColorStream.h"
-#include "debug.h"
+#include "Debug.h"
 
 static const int COLORSTREAM_PERIOD_IN_MS = 1000;
 static const int COLORSTREAM_TIMER_SPEED_IN_HZ = 10000;
@@ -52,7 +52,7 @@ _Noreturn void RTCoreMain(void)
     VectorTableInit(); // allows blocking interrupts in timer thread
     CPUFreq_Set(26000000); // don't know why this is needed! -- rsc
 
-    debug_init(MT3620_UNIT_ISU1);   
+    DEBUG_Init(MT3620_UNIT_ISU1);   
     DEBUG("--------------AAA---------------\r\n");
     DEBUG("UART_RTApp_MT3620_BareMetal\r\n");
     DEBUG("App built on: " __DATE__ " " __TIME__ "\r\n");

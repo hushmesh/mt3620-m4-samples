@@ -7,7 +7,7 @@ PROJECT(UART_RTApp_MT3620_BareMetal C)
 # Create executable
 ADD_EXECUTABLE(${PROJECT_NAME} 
 	main.c 
-	debug.c
+	Debug.c
 	TCS34725.c 
 	ColorStream.c
 	lib/VectorTable.c 

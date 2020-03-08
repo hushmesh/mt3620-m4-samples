@@ -2,7 +2,7 @@
 
 UART* DEBUG_UART = 0;
 
-void debug_init(Platform_Unit unit) {
+void DEBUG_Init(Platform_Unit unit) {
     if (DEBUG_UART != 0) {
         /* already initialized, do nothing */
         return;
